@@ -1,0 +1,7 @@
+cd sap-expense-integration
+git init
+git add .
+git commit -m "Initial commit: mock SAP HCM/FICO OData services + policy engine"
+git branch -M main
+git remote add origin https://github.com/YOUR_USERNAME/sap-expense-integration.git
+git push -u origin main
