@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Expense & Travel — SAP HCM/FICO Prototype</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root {
+    --ink: #16202b;
+    --ink-soft: #4b5a68;
+    --paper: #eef1f4;
+    --surface: #ffffff;
+    --line: #dde2e7;
+    --rail-compliant: #0f6b5c;
+    --bg-compliant: #e9f4f1;
+    --rail-warn: #a6740a;
+    --bg-warn: #fbf3e0;
+    --rail-block: #a63a3a;
+    --bg-block: #fbeaea;
+    --rail-neutral: #6b7684;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+  .shell { max-width: 780px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  header.top { margin-bottom: 28px; }
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 0 0 6px;
+  }
+  h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .lede { color: var(--ink-soft); font-size: 14px; margin: 0; }
+
+  nav.tabs {
+    display: flex;
+    gap: 2px;
+    background: var(--line);
+    border-radius: 10px;
+    padding: 3px;
+    margin-bottom: 24px;
+  }
+  nav.tabs button {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 9px 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  nav.tabs button.active { background: var(--surface); color: var(--ink); }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px 22px;
+    margin-bottom: 14px;
+  }
+
+  label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+    margin-bottom: 5px;
+  }
+  select, input {
+    width: 100%;
+    padding: 9px 10px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    background: var(--surface);
+    color: var(--ink);
+    margin-bottom: 16px;
+  }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  button.primary {
+    background: var(--ink);
+    color: var(--surface);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 7px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button.primary:hover { opacity: 0.88; }
+  button.ghost {
+    background: transparent;
+    border: 1px solid var(--line);
+    padding: 9px 16px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .railcard {
+    display: flex;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .rail { width: 5px; flex-shrink: 0; }
+  .rail.compliant { background: var(--rail-compliant); }
+  .rail.warn { background: var(--rail-warn); }
+  .rail.block { background: var(--rail-block); }
+  .rail.neutral { background: var(--rail-neutral); }
+  .railbody { padding: 15px 18px; flex: 1; }
+
+  .rowtop { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .name { font-weight: 600; font-size: 14px; margin: 0 0 3px; }
+  .meta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+  .msg { font-size: 13px; margin: 8px 0 0; }
+  .msg.compliant { color: var(--rail-compliant); }
+  .msg.warn { color: var(--rail-warn); }
+  .msg.block { color: var(--rail-block); }
+
+  .tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 3px 9px;
+    border-radius: 999px;
+    white-space: nowrap;
+    height: fit-content;
+  }
+  .tag.compliant { background: var(--bg-compliant); color: var(--rail-compliant); }
+  .tag.warn { background: var(--bg-warn); color: var(--rail-warn); }
+  .tag.block { background: var(--bg-block); color: var(--rail-block); }
+  .tag.neutral { background: var(--paper); color: var(--ink-soft); }
+
+  .actions { display: flex; gap: 8px; margin-top: 12px; }
+  .empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--ink-soft);
+    font-size: 13px;
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  td {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+    padding: 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  tr:last-child td { border-bottom: none; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header class="top">
+    <p class="eyebrow">SAP HCM · FICO Integration Prototype</p>
+    <h1>Expense &amp; travel</h1>
+    <p class="lede">Point-of-entry policy compliance, resolved live against HR and finance master data.</p>
+  </header>
+
+  <nav class="tabs">
+    <button class="active" data-tab="submit">Submit</button>
+    <button data-tab="approvals">Approvals</button>
+    <button data-tab="ledger">FICO ledger</button>
+  </nav>
+
+  <!-- SUBMIT -->
+  <section class="panel active" id="panel-submit">
+    <div class="card">
+      <label>Employee</label>
+      <select id="employeeId">
+        <option value="10045821">Priya Nair — M3 — Sales, APAC</option>
+        <option value="10032190">Arjun Mehta — M6 — Sales, Global</option>
+      </select>
+
+      <div class="row">
+        <div>
+          <label>Category</label>
+          <select id="category" onchange="toggleFields()">
+            <option value="Airfare - international">Airfare — international</option>
+            <option value="Hotel">Hotel</option>
+            <option value="Client meal">Client meal</option>
+          </select>
+        </div>
+        <div>
+          <label>Amount (USD)</label>
+          <input id="amount" type="number" value="1450" />
+        </div>
+      </div>
+
+      <div class="row" id="fareRow">
+        <div>
+          <label>Fare class</label>
+          <select id="fareClass">
+            <option value="economy">Economy</option>
+            <option value="business">Business</option>
+          </select>
+        </div>
+        <div id="attendeeWrap" style="display:none">
+          <label>Attendees</label>
+          <input id="attendeeCount" type="number" value="1" />
+        </div>
+      </div>
+
+      <button class="primary" onclick="submitExpense()">Submit expense</button>
+    </div>
+
+    <div id="submitResult"></div>
+  </section>
+
+  <!-- APPROVALS -->
+  <section class="panel" id="panel-approvals">
+    <div id="approvalsList"></div>
+  </section>
+
+  <!-- LEDGER -->
+  <section class="panel" id="panel-ledger">
+    <div class="card" style="padding:0; overflow:hidden">
+      <table>
+        <thead>
+          <tr><th>Posting</th><th>GL account</th><th>Cost center</th><th>Amount</th><th>Status</th></tr>
+        </thead>
+        <tbody id="ledgerBody"></tbody>
+      </table>
+    </div>
+    <div id="ledgerEmpty"></div>
+  </section>
+
+</div>
+
+<script>
+// ---- mock HCM / FICO master data, mirroring the real repo's data files ----
+const employees = [
+  { id: "10045821", first: "Priya", last: "Nair", grade: "M3", costCenter: "CC-4021", managerId: "10032190" },
+  { id: "10032190", first: "Arjun", last: "Mehta", grade: "M6", costCenter: "CC-4000", managerId: "10011000" },
+  { id: "10011000", first: "Sana", last: "Iyer", grade: "M8", costCenter: "CC-4000", managerId: null },
+];
+
+const glMapping = {
+  "Airfare - international": { account: "6110", name: "Travel - International" },
+  "Hotel": { account: "6120", name: "Lodging" },
+  "Client meal": { account: "6200", name: "Client Entertainment" },
+};
+
+function gradeNum(g) { return Number(String(g).match(/\d+/)[0]); }
+function findEmployee(id) { return employees.find(e => e.id === id); }
+
+function evaluate(expense, employee) {
+  const g = gradeNum(employee.grade);
+  if (expense.category === "Airfare - international" && expense.fareClass === "business" && g < 5) {
+    return { status: "block", message: "Business class requires grade M5+. Economy is the policy limit for this route." };
+  }
+  if (expense.category === "Hotel") {
+    const cap = g <= 3 ? 180 : g <= 5 ? 260 : 400;
+    if (expense.amount > cap) {
+      return { status: "warn", message: `Rate exceeds the $${cap}/night cap for your grade band.` };
+    }
+  }
+  if (expense.category === "Client meal") {
+    const perHead = expense.amount / (expense.attendeeCount || 1);
+    if (perHead > 75) {
+      return { status: "warn", message: `Exceeds the $75/head client meal limit ($${perHead.toFixed(0)}/head).` };
+    }
+  }
+  return { status: "compliant", message: "Within policy — auto-cleared." };
+}
+
+// ---- app state ----
+let submissions = [];
+let postings = [];
+let submissionCounter = 1;
+let postingCounter = 5000000001;
+
+function toggleFields() {
+  const cat = document.getElementById('category').value;
+  document.getElementById('attendeeWrap').style.display = cat === 'Client meal' ? 'block' : 'none';
+}
+
+function submitExpense() {
+  const employeeId = document.getElementById('employeeId').value;
+  const category = document.getElementById('category').value;
+  const amount = Number(document.getElementById('amount').value);
+  const fareClass = document.getElementById('fareClass').value;
+  const attendeeCount = Number(document.getElementById('attendeeCount').value);
+  const employee = findEmployee(employeeId);
+
+  const decision = evaluate({ category, amount, fareClass, attendeeCount }, employee);
+  const gl = glMapping[category];
+  const manager = employee.managerId ? findEmployee(employee.managerId) : null;
+
+  const submission = {
+    id: submissionCounter++,
+    employee, category, amount, fareClass, attendeeCount,
+    decision, gl, approver: manager,
+    state: decision.status === 'block' ? 'blocked' : 'pending',
+  };
+  submissions.unshift(submission);
+
+  renderSubmitResult(submission);
+  renderApprovals();
+}
+
+function renderSubmitResult(s) {
+  const cls = s.decision.status;
+  const label = cls === 'block' ? 'Blocked' : cls === 'warn' ? 'Flagged' : 'Compliant';
+  document.getElementById('submitResult').innerHTML = `
+    <div class="railcard">
+      <div class="rail ${cls === 'block' ? 'block' : cls === 'warn' ? 'warn' : 'compliant'}"></div>
+      <div class="railbody">
+        <div class="rowtop">
+          <div>
+            <p class="name">${s.employee.first} ${s.employee.last} — ${s.category}</p>
+            <p class="meta">$${s.amount} · GL ${s.gl.account} · ${s.employee.costCenter}</p>
+          </div>
+          <span class="tag ${cls === 'block' ? 'block' : cls === 'warn' ? 'warn' : 'compliant'}">${label}</span>
+        </div>
+        <p class="msg ${cls === 'block' ? 'block' : cls === 'warn' ? 'warn' : 'compliant'}">${s.decision.message}</p>
+        ${s.approver && s.state !== 'blocked' ? `<p class="meta" style="margin-top:8px">Routed to ${s.approver.first} ${s.approver.last} for approval</p>` : ''}
+      </div>
+    </div>`;
+}
+
+function renderApprovals() {
+  const pending = submissions.filter(s => s.state === 'pending');
+  const el = document.getElementById('approvalsList');
+  if (!pending.length) {
+    el.innerHTML = `<div class="empty">Nothing pending. Submit an expense to see it appear here for approval.</div>`;
+    return;
+  }
+  el.innerHTML = pending.map(s => {
+    const cls = s.decision.status === 'warn' ? 'warn' : 'compliant';
+    const label = s.decision.status === 'warn' ? 'Flagged' : 'Auto-cleared';
+    return `
+    <div class="railcard">
+      <div class="rail ${cls}"></div>
+      <div class="railbody">
+        <div class="rowtop">
+          <div>
+            <p class="name">${s.employee.first} ${s.employee.last} — ${s.category}</p>
+            <p class="meta">$${s.amount} · GL ${s.gl.account} · ${s.employee.costCenter}</p>
+          </div>
+          <span class="tag ${cls}">${label}</span>
+        </div>
+        <p class="msg ${cls}">${s.decision.message}</p>
+        <div class="actions">
+          <button class="primary" onclick="approve(${s.id})">Approve</button>
+          <button class="ghost" onclick="sendBack(${s.id})">Send back</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function approve(id) {
+  const s = submissions.find(x => x.id === id);
+  s.state = 'approved';
+  postings.unshift({
+    id: postingCounter++,
+    glAccount: s.gl.account,
+    costCenter: s.employee.costCenter,
+    amount: s.amount,
+    status: 'Queued for payment run',
+  });
+  renderApprovals();
+  renderLedger();
+}
+
+function sendBack(id) {
+  const s = submissions.find(x => x.id === id);
+  s.state = 'sent-back';
+  renderApprovals();
+}
+
+function renderLedger() {
+  const body = document.getElementById('ledgerBody');
+  const empty = document.getElementById('ledgerEmpty');
+  if (!postings.length) {
+    body.innerHTML = '';
+    empty.innerHTML = `<div class="empty">No postings yet. Approve an expense to queue it here.</div>`;
+    return;
+  }
+  empty.innerHTML = '';
+  body.innerHTML = postings.map(p => `
+    <tr>
+      <td>${p.id}</td>
+      <td>${p.glAccount}</td>
+      <td>${p.costCenter}</td>
+      <td>$${p.amount}</td>
+      <td>${p.status}</td>
+    </tr>`).join('');
+}
+
+// ---- tabs ----
+document.querySelectorAll('nav.tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+renderApprovals();
+renderLedger();
+</script>
+</body>
+</html>
