@@ -1,0 +1,6 @@
+[
+  { "GLAccount": "6100", "GLAccountName": "Travel - Domestic", "ExpenseCategory": "Airfare - domestic", "TaxCode": "V0" },
+  { "GLAccount": "6110", "GLAccountName": "Travel - International", "ExpenseCategory": "Airfare - international", "TaxCode": "V0" },
+  { "GLAccount": "6120", "GLAccountName": "Lodging", "ExpenseCategory": "Hotel", "TaxCode": "V1" },
+  { "GLAccount": "6200", "GLAccountName": "Client Entertainment", "ExpenseCategory": "Client meal", "TaxCode": "V1" }
+]

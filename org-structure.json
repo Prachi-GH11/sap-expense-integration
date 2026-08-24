@@ -1,0 +1,5 @@
+[
+  { "OrgUnit": "10001234", "OrgUnitName": "Sales - APAC", "ParentOrgUnit": "10001200" },
+  { "OrgUnit": "10001200", "OrgUnitName": "Sales - Global", "ParentOrgUnit": "10001100" },
+  { "OrgUnit": "10001100", "OrgUnitName": "Revenue Organization", "ParentOrgUnit": null }
+]

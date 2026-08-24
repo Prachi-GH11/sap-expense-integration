@@ -1,0 +1,73 @@
+{
+  "rejectionReasonCodes": [
+    { "code": "OVER_LIMIT", "label": "Exceeds policy limit, no valid justification" },
+    { "code": "MISSING_RECEIPT", "label": "Receipt missing or illegible" },
+    { "code": "WRONG_COST_OBJECT", "label": "Incorrect cost center or WBS element" },
+    { "code": "DUPLICATE", "label": "Duplicate of a previously submitted expense" },
+    { "code": "OTHER", "label": "Other — see note" }
+  ],
+
+  "perDiemRates": [
+    {
+      "country": "SG",
+      "countryName": "Singapore",
+      "currency": "SGD",
+      "dailyMax": 120,
+      "mealsIncludedDeduction": { "breakfast": 0.15, "lunch": 0.30, "dinner": 0.35 }
+    },
+    {
+      "country": "IN",
+      "countryName": "India",
+      "currency": "INR",
+      "dailyMax": 3500,
+      "mealsIncludedDeduction": { "breakfast": 0.15, "lunch": 0.30, "dinner": 0.35 }
+    },
+    {
+      "country": "US",
+      "countryName": "United States",
+      "currency": "USD",
+      "dailyMax": 150,
+      "mealsIncludedDeduction": { "breakfast": 0.15, "lunch": 0.30, "dinner": 0.35 }
+    }
+  ],
+
+  "eligibilityRules": [
+    {
+      "ruleId": "TRAVEL-CLASS-001",
+      "category": "Airfare - international",
+      "description": "Business class requires grade M5+",
+      "eligibility": { "minJobGradeNumber": 5 },
+      "onViolation": {
+        "severity": "block",
+        "message": "Business class requires grade M5+. Economy is the policy limit for this route.",
+        "allowOverride": true
+      },
+      "appliesWhen": { "fareClass": "business" }
+    },
+    {
+      "ruleId": "HOTEL-CAP-002",
+      "category": "Hotel",
+      "description": "Nightly hotel rate capped by grade band",
+      "eligibility": {
+        "maxNightlyRateByGrade": { "low": 180, "mid": 260, "high": 400 },
+        "currency": "USD"
+      },
+      "onViolation": {
+        "severity": "warn",
+        "message": "Rate exceeds standard cap for your grade band.",
+        "allowOverride": true
+      }
+    },
+    {
+      "ruleId": "MEAL-CAP-003",
+      "category": "Client meal",
+      "description": "Client meals capped per head",
+      "eligibility": { "maxPerHead": 75, "currency": "USD" },
+      "onViolation": {
+        "severity": "warn",
+        "message": "Exceeds per-head client meal limit.",
+        "allowOverride": true
+      }
+    }
+  ]
+}

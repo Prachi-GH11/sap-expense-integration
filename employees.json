@@ -1,0 +1,35 @@
+[
+  {
+    "EmployeeID": "10045821",
+    "FirstName": "Priya",
+    "LastName": "Nair",
+    "JobGrade": "M3",
+    "OrgUnit": "10001234",
+    "CostCenter": "CC-4021",
+    "ManagerID": "10032190",
+    "Email": "priya.nair@company.com",
+    "EmploymentStatus": "Active"
+  },
+  {
+    "EmployeeID": "10032190",
+    "FirstName": "Arjun",
+    "LastName": "Mehta",
+    "JobGrade": "M6",
+    "OrgUnit": "10001200",
+    "CostCenter": "CC-4000",
+    "ManagerID": "10011000",
+    "Email": "arjun.mehta@company.com",
+    "EmploymentStatus": "Active"
+  },
+  {
+    "EmployeeID": "10011000",
+    "FirstName": "Sana",
+    "LastName": "Iyer",
+    "JobGrade": "M8",
+    "OrgUnit": "10001100",
+    "CostCenter": "CC-4000",
+    "ManagerID": null,
+    "Email": "sana.iyer@company.com",
+    "EmploymentStatus": "Active"
+  }
+]

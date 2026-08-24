@@ -1,0 +1,4 @@
+[
+  { "CostCenter": "CC-4021", "CostCenterName": "Sales - APAC", "ControllingArea": "1000", "Currency": "USD" },
+  { "CostCenter": "CC-4000", "CostCenterName": "Sales - Global", "ControllingArea": "1000", "Currency": "USD" }
+]
