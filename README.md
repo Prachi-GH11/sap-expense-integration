@@ -12,7 +12,10 @@ npm install
 npm start
 ```
 
-Server runs on `http://localhost:3000`.
+Server runs on `http://localhost:3000`. Open that URL in a browser for the
+demo frontend — pick an employee, submit an expense, watch it get
+blocked/flagged/cleared, and see it land in the FICO payment queue below the
+form. Everything on that page hits the real backend, not mock UI state.
 
 ## What's mocked vs. real
 
@@ -40,13 +43,38 @@ conventions so the integration pattern is credible:
 **Mock FICO**
 - `GET /FICO/API_COSTCENTER_SRV/CostCenterSet`
 - `GET /FICO/API_GLACCOUNTLINEITEM_SRV/GLAccountSet?$filter=ExpenseCategory eq 'Hotel'`
-- `POST /FICO/API_GLPOSTING_SRV/PostingSet`
+- `POST /FICO/API_GLPOSTING_SRV/PostingSet` — requires `PostedBy`; rejects
+  postings without an identity, by design (see traceability table below)
 - `GET /FICO/API_GLPOSTING_SRV/PostingSet` (view the queue)
 
 **App orchestration**
 - `POST /api/expenses/submit` — resolves employee from HCM, runs the policy
-  engine, resolves GL coding from FICO, posts if compliant, and routes to
-  the approver from the HCM manager hierarchy.
+  engine, resolves a GL coding **preview** from FICO, and routes to the
+  approver from the HCM manager hierarchy. Does **not** post to FICO —
+  nothing posts until an approver acts.
+- `GET /api/expenses/pending` — feeds the approver dashboard
+- `GET /api/expenses/:id` — full record, including rejection reason if rejected
+- `POST /api/expenses/:id/approve` — the only place a GL posting is created;
+  stamps `PostedBy`/`CreatedBy`/`OnBehalfOf`
+- `POST /api/expenses/:id/reject` — body `{ reasonCode, reasonNote }`
+- `POST /api/per-diem/calculate` — body `{ country, startDate, endDate, mealsIncluded?, previousTotal? }`;
+  omit `previousTotal` for an initial calculation, include it to get a
+  recalculation with a `changed` flag
+
+## Traceability to the customer gap analysis
+
+This repo's data model and orchestration logic were extended directly from
+a customer workshop gap list (AS-IS/To-Be). Each row below is a real gap;
+see `travel-mgmt-gap-analysis.md` in the case study for the full writeup.
+
+| Gap | Where it's fixed in this repo |
+|---|---|
+| G/L shows clearing account instead of User ID | `ficoService.js` — `PostedBy` is a required field on every posting |
+| 'Posted By' not visible on postings | `PostingSet` response includes `PostedBy` on every record |
+| 'Created By' missing on on-behalf submissions | `server.js` — `onBehalfOfEmployeeId` param; posting carries both `CreatedBy` and `OnBehalfOf` |
+| No rejection reason captured or shown | `POST /api/expenses/:id/reject` + `reasonCode`/`reasonNote` on the record, visible via `GET /api/expenses/:id` |
+| Per diem not recalculated on date change | `policyEngine.js` — `recalculatePerDiem()`, exposed via `/api/per-diem/calculate` |
+| No approval gate before posting | `server.js` — submissions are held as `pending-approval`; `/approve` is the only path to a GL posting |
 
 ## Try it
 
