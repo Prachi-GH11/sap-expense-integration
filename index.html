@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Expense submission — SAP integration demo</title>
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --surface: #ffffff;
+    --border: #e5e3df;
+    --text: #1a1a19;
+    --text-secondary: #6b6a66;
+    --accent: #c96442;
+    --success-bg: #eef6f0;
+    --success-text: #2a6b3f;
+    --success-border: #bfe0c9;
+    --danger-bg: #fbeeed;
+    --danger-text: #b0362b;
+    --danger-border: #f1c9c4;
+    --warning-bg: #fdf5e6;
+    --warning-text: #8a5a10;
+    --warning-border: #f2ddab;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    max-width: 640px;
+    margin: 40px auto;
+    padding: 0 20px;
+  }
+  h1 { font-size: 20px; font-weight: 600; margin-bottom: 2px; }
+  .subtitle { color: var(--text-secondary); font-size: 13px; margin-bottom: 24px; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+  select, input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    margin-bottom: 14px;
+  }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  button {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  button:hover { opacity: 0.9; }
+  #result { margin-top: 18px; }
+  .badge {
+    display: inline-block;
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-weight: 500;
+  }
+  .badge.blocked { background: var(--danger-bg); color: var(--danger-text); border: 1px solid var(--danger-border); }
+  .badge.flagged { background: var(--warning-bg); color: var(--warning-text); border: 1px solid var(--warning-border); }
+  .badge.compliant { background: var(--success-bg); color: var(--success-text); border: 1px solid var(--success-border); }
+  pre {
+    background: #f0efec;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 12px;
+    overflow-x: auto;
+  }
+  .queue-item {
+    font-size: 13px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .queue-item:last-child { border-bottom: none; }
+  h2 { font-size: 14px; font-weight: 600; margin: 0 0 10px; }
+</style>
+</head>
+<body>
+
+<h1>Submit an expense</h1>
+<p class="subtitle">Live demo — hits the real mock HCM/FICO OData services and orchestration endpoint.</p>
+
+<div class="card">
+  <label>Employee</label>
+  <select id="employeeId">
+    <option value="10045821">Priya Nair — M3 — Sales, APAC</option>
+    <option value="10032190">Arjun Mehta — M6 — Sales, Global</option>
+  </select>
+
+  <div class="row">
+    <div>
+      <label>Category</label>
+      <select id="category">
+        <option value="Airfare - international">Airfare — international</option>
+        <option value="Hotel">Hotel</option>
+        <option value="Client meal">Client meal</option>
+      </select>
+    </div>
+    <div>
+      <label>Amount (USD)</label>
+      <input id="amount" type="number" value="1450" />
+    </div>
+  </div>
+
+  <div class="row" id="extraFields">
+    <div>
+      <label>Fare class (airfare only)</label>
+      <select id="fareClass">
+        <option value="economy">Economy</option>
+        <option value="business">Business</option>
+      </select>
+    </div>
+    <div>
+      <label>Attendees (client meal only)</label>
+      <input id="attendeeCount" type="number" value="1" />
+    </div>
+  </div>
+
+  <button onclick="submitExpense()">Submit expense</button>
+</div>
+
+<div id="result"></div>
+
+<div class="card">
+  <h2>Pending approvals</h2>
+  <div id="pending"><p style="font-size:13px;color:var(--text-secondary)">Loading…</p></div>
+</div>
+
+<div class="card">
+  <h2>FICO payment run queue</h2>
+  <div id="queue"><p style="font-size:13px;color:var(--text-secondary)">Loading…</p></div>
+</div>
+
+<script>
+async function submitExpense() {
+  const body = {
+    employeeId: document.getElementById('employeeId').value,
+    category: document.getElementById('category').value,
+    amount: Number(document.getElementById('amount').value),
+    fareClass: document.getElementById('fareClass').value,
+    attendeeCount: Number(document.getElementById('attendeeCount').value),
+  };
+
+  const res = await fetch('/api/expenses/submit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+
+  const badgeClass = data.status.includes('blocked') ? 'blocked'
+    : data.status.includes('flagged') ? 'flagged'
+    : 'compliant';
+
+  let html = `<div class="card">
+    <span class="badge ${badgeClass}">${data.status}</span>`;
+
+  if (data.violations && data.violations.length) {
+    html += `<ul style="font-size:13px;margin:10px 0">`;
+    data.violations.forEach(v => html += `<li>${v.message}</li>`);
+    html += `</ul>`;
+  }
+  if (data.routedTo) {
+    html += `<p style="font-size:13px;margin:8px 0">Routed to approver: <strong>${data.routedTo}</strong> — nothing posts to FICO until they act.</p>`;
+  }
+  html += `</div>`;
+
+  document.getElementById('result').innerHTML = html;
+  loadPending();
+}
+
+async function loadPending() {
+  const res = await fetch('/api/expenses/pending');
+  const pending = await res.json();
+  const el = document.getElementById('pending');
+  if (!pending.length) {
+    el.innerHTML = '<p style="font-size:13px;color:var(--text-secondary)">Nothing pending.</p>';
+    return;
+  }
+  el.innerHTML = pending.map(e => `
+    <div class="queue-item">
+      <strong>${e.expenseId}</strong> — ${e.traveler.FirstName} ${e.traveler.LastName}, ${e.category}, $${e.amount}
+      ${e.decision.violations.length ? `<div style="font-size:12px;color:#8a5a10">${e.decision.violations[0].message}</div>` : ''}
+      <div style="margin-top:6px">
+        <button onclick="approveExpense('${e.expenseId}')">Approve</button>
+        <button onclick="rejectExpense('${e.expenseId}')" style="background:transparent;border:1px solid var(--border);margin-left:6px">Reject</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function approveExpense(id) {
+  await fetch(`/api/expenses/${id}/approve`, { method: 'POST' });
+  loadPending();
+  loadQueue();
+}
+
+async function rejectExpense(id) {
+  const reasonNote = prompt('Reason for rejecting this expense?') || '';
+  await fetch(`/api/expenses/${id}/reject`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reasonCode: 'OTHER', reasonNote }),
+  });
+  loadPending();
+}
+
+async function loadQueue() {
+  const res = await fetch('/FICO/API_GLPOSTING_SRV/PostingSet');
+  const data = await res.json();
+  const postings = data.d.results;
+  const el = document.getElementById('queue');
+  if (!postings.length) {
+    el.innerHTML = '<p style="font-size:13px;color:var(--text-secondary)">Nothing queued yet.</p>';
+    return;
+  }
+  el.innerHTML = postings.map(p => `
+    <div class="queue-item">
+      <strong>${p.PostingID}</strong> — GL ${p.GLAccount} · ${p.CostCenter} · $${p.Amount} · ${p.Status}
+      <div style="font-size:11px;color:var(--text-secondary)">Posted by ${p.PostedBy}${p.OnBehalfOf ? ` (on behalf, created by ${p.CreatedBy})` : ''}</div>
+    </div>
+  `).join('');
+}
+
+loadPending();
+loadQueue();
+</script>
+</body>
+</html>
